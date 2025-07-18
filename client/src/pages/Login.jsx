@@ -28,7 +28,7 @@ const LoginPage = () => {
     <div className="h-screen grid lg:grid-cols-2">
       {/* Left Side - Form */}
       <div className="flex flex-col justify-center items-center p-6 sm:p-12">
-        <div className="w-full max-w-md space-y-8 bg-slate-400 rounded-xl lg:rounded-br-[5rem] lg:rounded-tl-[5rem] py-4 px-6 shadow-sm shadow-black">
+        <div className="w-full max-w-md space-y-8 bg-secondary rounded-xl lg:rounded-br-[5rem] lg:rounded-tl-[5rem] py-4 px-6 shadow-sm shadow-black">
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="flex flex-col items-center gap-2 group">
@@ -54,7 +54,7 @@ const LoginPage = () => {
                 </div>
                 <input
                   type="email"
-                  className={`input input-bordered w-full pl-10`}
+                  className={`input input-bordered w-full pl-10 bg-accent`}
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) =>
@@ -75,7 +75,7 @@ const LoginPage = () => {
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
-                  className={`input input-bordered w-full pl-10`}
+                  className={`input input-bordered w-full pl-10 bg-accent`}
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) =>

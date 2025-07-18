@@ -17,8 +17,8 @@ const Settings = () => {
   return (
     <div className="h-fit container mx-auto px-4 pt-20 max-w-5xl">
       <div className="space-y-6">
-        <div className="flex sm:flex-row flex-col justify-between items-center">
-          <div className="flex flex-col gap-1">
+        <div className="flex sm:flex-row flex-col gap-2 justify-between items-center">
+          <div className="hidden sm:flex flex-col items-center">
             <h2 className="text-lg font-bold">Theme</h2>
             <p className="text-sm text-secondary">
               Choose a theme for your chat interface

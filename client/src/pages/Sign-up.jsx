@@ -56,7 +56,7 @@ const SignUp = () => {
     <div className="min-h-screen grid lg:grid-cols-2">
       {/* Left side*/}
       <div className="flex flex-col justify-center items-center p-6 sm:p-12 lg:border-t-4 border-slate-800">
-        <div className="w-full max-w-md space-y-8 bg-slate-400 rounded-xl lg:rounded-br-[5rem] lg:rounded-tl-[5rem] py-4 px-6 shadow-sm shadow-black">
+        <div className="w-full max-w-md space-y-8 bg-secondary rounded-xl lg:rounded-br-[5rem] lg:rounded-tl-[5rem] py-4 px-6 shadow-sm shadow-black">
           {/* LOGO */}
           <div className="text-center mb-8">
             <div className="flex flex-col items-center gap-2 group">
@@ -82,7 +82,7 @@ const SignUp = () => {
                 </div>
                 <input
                   type="text"
-                  className={`input input-bordered w-full pl-10`}
+                  className={`input input-bordered w-full pl-10 bg-accent`}
                   placeholder="John Doe"
                   value={formData.fullname}
                   onChange={(e) =>
@@ -103,7 +103,7 @@ const SignUp = () => {
                 </div>
                 <input
                   type="email"
-                  className={`input input-bordered w-full pl-10`}
+                  className={`input input-bordered w-full pl-10  bg-accent`}
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) =>
@@ -124,7 +124,7 @@ const SignUp = () => {
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
-                  className={`input input-bordered w-full pl-10`}
+                  className={`input input-bordered w-full pl-10  bg-accent`}
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) =>

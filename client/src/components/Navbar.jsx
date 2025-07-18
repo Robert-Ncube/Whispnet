@@ -27,7 +27,7 @@ const Navbar = () => {
               <div className="size-9 rounded-lg text-blue-800 flex items-center justify-center">
                 <MessageCircleHeart className="w-10 h-10" />
               </div>
-              <h1 className="text-xl font-bold uppercase bg-gradient-to-r from-blue-700 via-blue-400 to-purple-400 bg-clip-text text-transparent inline-block">
+              <h1 className="text-xl font-bold uppercase bg-gradient-to-r from-blue-800 via-blue-400 to-purple-400 bg-clip-text text-transparent inline-block">
                 Whispnet
               </h1>
             </Link>
@@ -36,11 +36,7 @@ const Navbar = () => {
           <div className="flex items-center gap-2">
             <Link
               to={"/settings"}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors"
-              style={{
-                backgroundColor: "var(--accent)",
-                color: "white", // Always white text on accent
-              }}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors bg-secondary hover:bg-secondary text-primary border"
               title="Settings"
             >
               <Settings className="h-4 w-4" />
@@ -51,11 +47,7 @@ const Navbar = () => {
               <>
                 <Link
                   to={"/profile"}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors"
-                  style={{
-                    backgroundColor: "var(--accent)",
-                    color: "white",
-                  }}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors bg-secondary hover:bg-secondary text-primary border"
                   title="Profile"
                 >
                   <User className="size-5" />
@@ -63,11 +55,8 @@ const Navbar = () => {
                 </Link>
 
                 <button
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-red-600/20 text-primary border"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-secondary text-primary border"
                   onClick={logout}
-                  style={{
-                    borderColor: "var(--danger)",
-                  }}
                   title="Logout"
                 >
                   <LogOut className="size-5" />

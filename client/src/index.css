@@ -14,12 +14,39 @@
   --warning: #f59e0b;
   --danger: #ef4444;
   --border: #d1d5db;
+
+  /* Font variables with fallbacks */
+  --font-heading: "Inter", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "Roboto Mono", monospace;
 }
 
 body {
+  font-family: var(--font-body);
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.3s, color 0.3s;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+code,
+pre,
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* Font loading indicator */
+.font-loading * {
+  visibility: hidden;
 }
 
 /* Utility classes */

@@ -13,7 +13,7 @@ import { useTheme } from "./providers/ThemeProvider";
 
 const App = () => {
   const { authUser, isCheckingAuth, checkAuth } = useAuthStore();
-  const { theme } = useTheme();
+  const { theme, fontsLoaded } = useTheme();
 
   useEffect(() => {
     checkAuth();
@@ -29,7 +29,12 @@ const App = () => {
   }
 
   return (
-    <div className="w-full min-h-screen bg-primary text-primary">
+    <div
+      className={`w-full min-h-screen bg-primary text-primary ${
+        fontsLoaded ? "" : "font-sans"
+      }`}
+      data-theme={theme}
+    >
       <Toaster position="top-right" />
       <Navbar />
       <Routes>

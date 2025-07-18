@@ -77,8 +77,6 @@ export const getUserById = async (req, res) => {
   }
 };
 
-export const getAllUsers = async (req, res) => {};
-
 export const getMessagesBetweenTwoUsers = async (req, res) => {
   try {
     const userId = req.user._id; // req.user is populated by protectRoute middleware
