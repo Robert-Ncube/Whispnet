@@ -128,30 +128,31 @@ export const updateProfile = async (req, res) => {
     const { fullname, profilePic } = req.body;
     const userId = req.user._id;
 
-    if (!fullname) {
+    // Remove the requirement for both fields
+    if (!fullname && !profilePic) {
       return res.status(400).json({
-        message: "Fullname is required!",
+        message: "At least one field (fullname or profilePic) is required!",
       });
     }
 
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({
-        message: "User not found!",
-      });
+      return res.status(404).json({ message: "User not found!" });
     }
 
-    user.fullname = fullname;
+    // Update only if provided
+    if (fullname) user.fullname = fullname;
 
     if (profilePic) {
-      if (!validator.isURL(profilePic)) {
-        return res.status(400).json({
-          message: "Invalid profile picture URL!",
-        });
+      // Delete old profile picture from Cloudinary if it exists
+      if (user.profilePic) {
+        const publicId = user.profilePic.split("/").pop().split(".")[0];
+        await cloudinary.uploader.destroy(`whispnet/profile_pics/${publicId}`);
       }
 
       try {
+        // If profilePic is a base64 string, upload it to Cloudinary
         const uploadResult = await cloudinary.uploader.upload(profilePic, {
           folder: "whispnet/profile_pics",
         });
@@ -175,9 +176,7 @@ export const updateProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Error during profile update:", error);
-    res.status(500).json({
-      message: "Internal server error!",
-    });
+    res.status(500).json({ message: "Internal server error!" });
   }
 };
 
@@ -213,6 +212,19 @@ export const deleteUserProfile = async (req, res) => {
       return res.status(404).json({
         message: "User not found!",
       });
+    }
+
+    // Delete profile picture from Cloudinary if it exists
+    if (user.profilePic) {
+      try {
+        const publicId = user.profilePic.split("/").pop().split(".")[0];
+        await cloudinary.uploader.destroy(`whispnet/profile_pics/${publicId}`);
+      } catch (error) {
+        console.error("Error deleting profile picture from Cloudinary:", error);
+        return res.status(500).json({
+          message: "Failed to delete profile picture!",
+        });
+      }
     }
 
     await User.findByIdAndDelete(userId);
