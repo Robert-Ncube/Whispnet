@@ -10,12 +10,12 @@ const Profile = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
 
-  const user = authUser?.user || {};
+  //console.log("User Details:", user);
 
   // Initialize edited name
   useEffect(() => {
-    setEditedName(user.fullname || "");
-  }, [user.fullname]);
+    setEditedName(authUser.fullname || "");
+  }, [authUser.fullname]);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -36,7 +36,7 @@ const Profile = () => {
   };
 
   const handleNameUpdate = async () => {
-    if (editedName.trim() && editedName !== user.fullname) {
+    if (editedName.trim() && editedName !== authUser.fullname) {
       await updateProfile({ fullname: editedName });
     }
     setIsEditingName(false);
@@ -55,7 +55,7 @@ const Profile = () => {
           <div className="flex flex-col items-center gap-4">
             <label htmlFor="avatar-upload" className="cursor-pointer">
               <Avatar
-                user={user}
+                user={authUser}
                 image={selectedImg}
                 size="xxl"
                 showEditIcon
@@ -112,7 +112,7 @@ const Profile = () => {
               ) : (
                 <div className="flex items-center gap-2">
                   <p className="px-4 py-2.5 bg-base-200 rounded-lg border flex-1 text-black">
-                    {user?.fullname}
+                    {authUser?.fullname}
                   </p>
                   <button
                     onClick={() => setIsEditingName(true)}
@@ -132,7 +132,7 @@ const Profile = () => {
                 Email Address
               </div>
               <p className="px-4 py-2.5 bg-base-200 rounded-lg border">
-                {user?.email}
+                {authUser?.email}
               </p>
             </div>
           </div>
@@ -144,7 +144,7 @@ const Profile = () => {
               <div className="flex items-center justify-between py-2 border-b border-zinc-700">
                 <span>Member Since</span>
                 <span className="text-zinc-400">
-                  {moment(user?.createdAt).format("MMMM Do, YYYY")}
+                  {moment(authUser?.createdAt).format("MMMM Do, YYYY")}
                 </span>
               </div>
               <div className="flex items-center justify-between py-2">

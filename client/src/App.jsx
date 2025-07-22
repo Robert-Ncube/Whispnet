@@ -10,6 +10,7 @@ import { useAuthStore } from "./store/useAuthStore";
 import { Toaster } from "react-hot-toast";
 import { Loader } from "lucide-react";
 import { useTheme } from "./providers/ThemeProvider";
+import Discover from "./pages/Discover";
 
 const App = () => {
   const { authUser, isCheckingAuth, checkAuth } = useAuthStore();
@@ -53,6 +54,10 @@ const App = () => {
         <Route
           path="/profile"
           element={authUser ? <Profile /> : <Navigate to={"/login"} />}
+        />
+        <Route
+          path="/discover"
+          element={authUser ? <Discover /> : <Navigate to={"/login"} />}
         />
         <Route path="/settings" element={<Settings />} />
       </Routes>

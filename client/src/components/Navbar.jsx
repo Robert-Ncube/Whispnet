@@ -36,7 +36,7 @@ const Navbar = () => {
           <div className="flex items-center gap-2">
             <Link
               to={"/settings"}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors bg-secondary hover:bg-secondary text-primary border"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors bg-secondary hover:bg-accent text-primary border"
               title="Settings"
             >
               <Settings className="h-4 w-4" />
@@ -47,7 +47,7 @@ const Navbar = () => {
               <>
                 <Link
                   to={"/profile"}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors bg-secondary hover:bg-secondary text-primary border"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors bg-secondary hover:bg-accent text-primary border"
                   title="Profile"
                 >
                   <User className="size-5" />
@@ -55,7 +55,7 @@ const Navbar = () => {
                 </Link>
 
                 <button
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-secondary text-primary border"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-accent text-primary border"
                   onClick={logout}
                   title="Logout"
                 >
