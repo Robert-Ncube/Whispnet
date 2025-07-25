@@ -13,7 +13,7 @@ import { useTheme } from "./providers/ThemeProvider";
 import Discover from "./pages/Discover";
 
 const App = () => {
-  const { authUser, isCheckingAuth, checkAuth } = useAuthStore();
+  const { authUser, isCheckingAuth, checkAuth, onlineUsers } = useAuthStore();
   const { theme, fontsLoaded } = useTheme();
 
   useEffect(() => {
@@ -28,6 +28,8 @@ const App = () => {
       </div>
     );
   }
+
+  //console.log("Online Users:", onlineUsers);
 
   return (
     <div

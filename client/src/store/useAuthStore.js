@@ -2,15 +2,19 @@ import { create } from "zustand";
 import axiosInstance from "../lib/axios";
 import toast from "react-hot-toast";
 import { useChatStore } from "./useChatStore";
+import { io } from "socket.io-client";
+
+const BASE_URL = "http://localhost:5000";
 
 const { resetChatStore } = useChatStore.getState();
 
-export const useAuthStore = create((set) => ({
+export const useAuthStore = create((set, get) => ({
   authUser: null,
   isSigningUp: false,
   isLogginIn: false,
   isUpdatingProfile: false,
   onlineUsers: [],
+  socket: null,
 
   isCheckingAuth: false,
 
@@ -23,6 +27,8 @@ export const useAuthStore = create((set) => ({
         authUser: response.data.user,
         isCheckingAuth: false,
       });
+
+      get().connectSocket();
     } catch (error) {
       console.error("Error checking authentication:", error);
       set({ isCheckingAuth: false, authUser: null });
@@ -35,6 +41,8 @@ export const useAuthStore = create((set) => ({
       const response = await axiosInstance.post("/auth/signup", formData);
       set({ authUser: response.data.user, isSigningIn: false });
       toast.success("Account created successfully!");
+
+      get().connectSocket();
     } catch (error) {
       toast.error(`Error Signing up:`);
       console.log("Response:", error.response.data.message);
@@ -49,6 +57,8 @@ export const useAuthStore = create((set) => ({
       const response = await axiosInstance.post("/auth/login", formData);
       set({ authUser: response.data.user, isLoggingIn: false });
       toast.success("Logged in successfully!");
+
+      get().connectSocket();
     } catch (error) {
       console.error("Error logging in:", error);
       toast.error(error.response?.data?.message || "Something went wrong!");
@@ -62,6 +72,8 @@ export const useAuthStore = create((set) => ({
       set({ authUser: null });
       resetChatStore();
       toast.success("Logged out successfully!");
+
+      get().disconnectSocket();
     } catch (error) {
       console.error("Error logging out:", error);
       toast.error(error.response?.data?.message || "Something went wrong!");
@@ -79,5 +91,27 @@ export const useAuthStore = create((set) => ({
       toast.error(error.response?.data?.message || "Something went wrong!");
       set({ isUpdatingProfile: false });
     }
+  },
+
+  connectSocket: () => {
+    const { authUser } = get();
+    if (!authUser || get().socket?.connected) return;
+
+    const socket = io(BASE_URL, {
+      query: {
+        userId: authUser._id,
+      },
+    });
+    socket.connect();
+
+    set({ socket });
+
+    socket.on("getOnlineUsers", (userIds) => {
+      set({ onlineUsers: userIds });
+    });
+  },
+
+  disconnectSocket: () => {
+    if (get().socket?.connected) get().socket?.disconnect();
   },
 }));

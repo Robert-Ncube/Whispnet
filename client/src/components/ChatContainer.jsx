@@ -19,8 +19,6 @@ const ChatContainer = () => {
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
 
-  const user = authUser?.user;
-
   useEffect(() => {
     getMessages(selectedUser._id);
     subscribeToMessages();
@@ -53,13 +51,7 @@ const ChatContainer = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages?.length ? (
           messages.map((message) => {
-            //console.log("messages:", messages);
-            // FIX: Proper sender identification
-            //console.log("message:", message);
             const isSentByuser = message.senderId._id === authUser._id;
-            //console.log("senderId:", message.senderId._id);
-            //console.log("user:", user._id);
-            //console.log("userId:", isSentByuser);
 
             return (
               <div

@@ -2,6 +2,8 @@ import Message from "../models/message.model.js";
 import cloudinary from "../lib/cloudinary.js";
 import User from "../models/user.model.js";
 
+import { getReceiverSocketId, io } from "../lib/sockect.js";
+
 export const getUsersForSideBar = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -149,9 +151,6 @@ export const sendMessage = async (req, res) => {
     const receiverId = req.params.id;
     const senderId = req.user._id;
 
-    console.log("Params:", req.params);
-    console.log("Body:", req.body);
-
     if (!text && !image) {
       return res.status(400).json({ message: "Message content is required!" });
     }
@@ -186,11 +185,20 @@ export const sendMessage = async (req, res) => {
 
     await newMessage.save();
 
+    await newMessage.populate([
+      { path: "senderId", select: "fullname profilePic" },
+      { path: "receiverId", select: "fullname profilePic" },
+    ]);
+
     // TODO: realtime functionality with socket.io will be implemented later here.
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", newMessage);
+    }
 
     res.status(201).json({
       message: "Message sent successfully!",
-      message: newMessage,
+      newMessage,
     });
   } catch (error) {
     console.error("Error while sending message:", error);

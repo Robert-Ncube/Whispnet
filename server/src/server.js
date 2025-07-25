@@ -7,8 +7,8 @@ import helmet from "helmet";
 
 import mainRoutes from "./routes/main.routes.js";
 import { connectDB } from "./lib/db.js";
+import { app, server } from "./lib/sockect.js";
 
-const app = express();
 dotenv.config();
 
 // Middleware
@@ -31,7 +31,7 @@ app.use("/api", mainRoutes);
 
 const PORT = process.env.PORT;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   connectDB();
 });

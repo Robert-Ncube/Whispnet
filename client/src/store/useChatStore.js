@@ -3,11 +3,12 @@ import toast from "react-hot-toast";
 import axiosInstance from "../lib/axios";
 import { useAuthStore } from "./useAuthStore";
 
-export const useChatStore = create((set) => ({
+export const useChatStore = create((set, get) => ({
   messages: [],
   isUsersLoading: false,
   isMessagesLoading: false,
   isSendingMessage: false,
+  unreadMessages: [],
   users: [],
   selectedUser: null,
   discoverableUsers: [],
@@ -46,7 +47,7 @@ export const useChatStore = create((set) => ({
     try {
       const response = await axiosInstance.get(`/messages/${userId}`);
       set({ messages: response.data.messages });
-      //console.log("Fetched messages:", response.data);
+      // console.log("Fetched messages:", response.data);
     } catch (error) {
       const errorStatus = error?.response.status;
       errorStatus !== 404
@@ -57,49 +58,17 @@ export const useChatStore = create((set) => ({
     }
   },
 
-  sendMessage: async (receiverId, messageContent) => {
-    set({ isSendingMessage: true });
-
-    const { chattedUserIds, getUsers } = useChatStore.getState();
-    const { authUser } = useAuthStore.getState(); // ✅ get current logged-in user
-    const { selectedUser } = useChatStore.getState(); // ✅ get the receiver
-
-    //console.log("userr:", authUser);
-
+  sendMessage: async (messageData) => {
+    const { selectedUser, messages } = get();
     try {
-      const response = await axiosInstance.post(
-        `/messages/send/${receiverId}`,
-        messageContent
+      const res = await axiosInstance.post(
+        `/messages/send/${selectedUser._id}`,
+        messageData
       );
 
-      // ✅ Patch the returned message so your frontend can render it properly
-      const patchedMessage = {
-        ...response.data.message,
-        senderId: {
-          _id: authUser._id,
-          profilePic: authUser.profilePic,
-          fullname: authUser.fullname,
-        },
-        receiverId: {
-          _id: selectedUser._id,
-          profilePic: selectedUser.profilePic,
-          fullname: selectedUser.fullname,
-        },
-      };
-
-      // ✅ Now use the patchedMessage to update your messages array
-      set((state) => ({
-        messages: [...state.messages, patchedMessage],
-      }));
-
-      // Refresh sidebar only if chatting with a new user
-      if (!chattedUserIds.includes(receiverId)) {
-        await getUsers();
-      }
+      set({ messages: [...messages, res.data.newMessage] });
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to send message.");
-    } finally {
-      set({ isSendingMessage: false });
+      toast.error(error.response.data.message);
     }
   },
 
@@ -108,8 +77,6 @@ export const useChatStore = create((set) => ({
       const response = await axiosInstance.get("/messages/users/all");
 
       set({ discoverableUsers: response.data.users });
-
-      console.log("Discoverable users:", response.data.users);
     } catch (error) {
       console.error("Error fetching discoverable users:", error);
       toast.error(
@@ -118,24 +85,57 @@ export const useChatStore = create((set) => ({
     }
   },
 
-  setSelectedUser: (user) => {
+  setSelectedUser: async (user) => {
+    const { authUser } = useAuthStore.getState();
+
     set({ selectedUser: user });
+
     if (user) {
-      // Fetch messages for the selected user
-      useChatStore.getState().getMessages(user._id);
+      // Fetch messages first
+      await get().getMessages(user._id);
+
+      // Optimistically mark messages as read in local state
+      set((state) => ({
+        messages: state.messages.map((msg) => ({
+          ...msg,
+          read: msg.senderId === user._id ? true : msg.read,
+        })),
+      }));
+
+      // Mark as read in backend via socket
+      const socket = useAuthStore.getState().socket;
+      socket.emit("markMessagesRead", {
+        userId: authUser._id,
+        contactId: user._id,
+      });
     } else {
-      // Clear messages if no user is selected
       set({ messages: [] });
     }
   },
 
   subscribeToMessages: () => {
-    // Placeholder for WebSocket or real-time subscription logic
-    //console.log("Subscribed to messages");
+    const { selectedUser } = get();
+    if (!selectedUser) return;
+
+    const socket = useAuthStore.getState().socket;
+
+    socket.on("newMessage", (newMessage) => {
+      const isMessageSentFromSelectedUser =
+        newMessage.senderId._id === selectedUser._id;
+      if (!isMessageSentFromSelectedUser) return;
+
+      set({
+        messages: [...get().messages, newMessage],
+      });
+    });
+
+    //console.log("Subscribed to messages.");
   },
 
   unsubscribeFromMessages: () => {
-    // Placeholder for WebSocket or real-time unsubscription logic
+    const socket = useAuthStore.getState().socket;
+    socket.off("newMessage");
+
     //console.log("Unsubscribed from messages");
   },
 

@@ -4,19 +4,34 @@ import SidebarSkeleton from "./SidebarSkeleton";
 import { Users, Search, ScanSearch } from "lucide-react";
 import Avatar from "./Avatar";
 import { Link } from "react-router-dom";
+import { useAuthStore } from "../store/useAuthStore";
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } =
-    useChatStore();
+  const {
+    getUsers,
+    users,
+    selectedUser,
+    setSelectedUser,
+    isUsersLoading,
+    subscribeToMessages,
+    unsubscribeFromMessages,
+  } = useChatStore();
 
-  //const { onlineUsers } = useAuthStore();
-  const onlineUsers = [];
+  const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     getUsers();
   }, [getUsers]);
+
+  useEffect(() => {
+    subscribeToMessages();
+
+    return () => {
+      unsubscribeFromMessages();
+    };
+  }, []);
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch = user.fullname
@@ -25,6 +40,8 @@ const Sidebar = () => {
     const matchesOnline = !showOnlineOnly || onlineUsers.includes(user._id);
     return matchesSearch && matchesOnline;
   });
+
+  //console.log("Sidebar Users:", users);
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
@@ -92,7 +109,7 @@ const Sidebar = () => {
       {/* User list */}
       <div className="overflow-y-auto w-full p-4 flex flex-col-reverse gap-2">
         {filteredUsers.length > 0 ? (
-          filteredUsers.map((user) => (
+          filteredUsers.reverse().map((user) => (
             <button
               key={user._id}
               onClick={() => setSelectedUser(user)}
@@ -108,26 +125,36 @@ const Sidebar = () => {
             >
               {/* ... user avatar and online indicator */}
               <div className="flex items-center gap-2 min-w-0 flex-1">
-                <div className="">
+                <div className="relative">
                   <Avatar
                     user={user}
                     image={user?.profilePic}
                     size="sm"
                     className=""
                   />
+                  {onlineUsers.includes(user._id) && (
+                    <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                  )}
                 </div>
-                <div className="text-start">
+                <div className="text-start min-w-0 flex-1">
                   <div className="font-medium truncate">{user.fullname}</div>
-                  <div className="text-sm text-zinc-400">
-                    {onlineUsers.includes(user._id) ? "Online" : "Offline"}
+                  <div className="text-xs text-zinc-500 truncate">
+                    {onlineUsers.includes(user._id) ? "Online" : "Offline • "}
                   </div>
                 </div>
+              </div>
+              <div className="">
+                {user.unreadCount > 0 && (
+                  <span className="flex items-center justify-center w-6 h-6 bg-green-500 rounded-full text-xs font-bold text-white">
+                    0
+                  </span>
+                )}
               </div>
             </button>
           ))
         ) : (
           <div className="text-center text-zinc-500 py-4">
-            {isUsersLoading ? "Loading..." : "No users found"}
+            {isUsersLoading ? "Loading..." : "You don't have any friends yet!"}
           </div>
         )}
       </div>
