@@ -146,7 +146,7 @@ const Sidebar = () => {
               <div className="">
                 {user.unreadCount > 0 && (
                   <span className="flex items-center justify-center w-6 h-6 bg-green-500 rounded-full text-xs font-bold text-white">
-                    0
+                    {user.unreadCount}
                   </span>
                 )}
               </div>

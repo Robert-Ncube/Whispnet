@@ -1,6 +1,7 @@
 import Message from "../models/message.model.js";
 import cloudinary from "../lib/cloudinary.js";
 import User from "../models/user.model.js";
+import mongoose from "mongoose";
 
 import { getReceiverSocketId, io } from "../lib/sockect.js";
 
@@ -33,9 +34,43 @@ export const getUsersForSideBar = async (req, res) => {
 
     const uniqueUsers = Array.from(userMap.values());
 
+    // Get contact IDs
+    const contactIds = uniqueUsers.map((user) => user._id);
+
+    // Aggregate unread message counts
+    const unreadCounts = await Message.aggregate([
+      {
+        $match: {
+          receiverId: new mongoose.Types.ObjectId(userId),
+          senderId: {
+            $in: contactIds.map((id) => new mongoose.Types.ObjectId(id)),
+          },
+          read: false,
+        },
+      },
+      {
+        $group: {
+          _id: "$senderId",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Create a map of unread counts
+    const unreadMap = new Map();
+    unreadCounts.forEach((item) =>
+      unreadMap.set(item._id.toString(), item.count)
+    );
+
+    // Add unreadCount to each user
+    const usersWithUnread = uniqueUsers.map((user) => ({
+      ...user.toObject(),
+      unreadCount: unreadMap.get(user._id.toString()) || 0,
+    }));
+
     res.status(200).json({
-      message: "Users fetched successfully for the sidebar!",
-      users: uniqueUsers,
+      message: "Users fetched successfully!",
+      users: usersWithUnread,
     });
   } catch (error) {
     console.error("Sidebar fetch error:", error);

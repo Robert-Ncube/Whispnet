@@ -22,6 +22,8 @@ export const useChatStore = create((set, get) => ({
         users: response.data.users,
         chattedUserIds: response.data.users.map((u) => u._id),
       });
+
+      console.log("Users", response.data.users);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to load users.");
     } finally {
@@ -72,6 +74,8 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+  setUnreadMessages: () => {},
+
   getDiscoverableUsers: async () => {
     try {
       const response = await axiosInstance.get("/messages/users/all");
@@ -91,7 +95,14 @@ export const useChatStore = create((set, get) => ({
     set({ selectedUser: user });
 
     if (user) {
-      // Fetch messages first
+      // Reset unread count for this user
+      set((state) => ({
+        users: state.users.map((u) =>
+          u._id === user._id ? { ...u, unreadCount: 0 } : u
+        ),
+      }));
+
+      // Fetch messages
       await get().getMessages(user._id);
 
       // Optimistically mark messages as read in local state
@@ -114,19 +125,35 @@ export const useChatStore = create((set, get) => ({
   },
 
   subscribeToMessages: () => {
-    const { selectedUser } = get();
-    if (!selectedUser) return;
-
     const socket = useAuthStore.getState().socket;
 
+    let updateTimeout;
     socket.on("newMessage", (newMessage) => {
-      const isMessageSentFromSelectedUser =
-        newMessage.senderId._id === selectedUser._id;
-      if (!isMessageSentFromSelectedUser) return;
+      const { selectedUser } = get();
+      clearTimeout(updateTimeout);
 
-      set({
-        messages: [...get().messages, newMessage],
-      });
+      updateTimeout = setTimeout(() => {
+        if (!selectedUser) return;
+        const isCurrentContact = selectedUser?._id === newMessage.senderId._id;
+
+        if (isCurrentContact) {
+          // Add message and mark as read
+          set({ messages: [...get().messages, newMessage] });
+          socket.emit("markMessagesRead", {
+            userId: authUser._id,
+            contactId: newMessage.senderId._id,
+          });
+        } else {
+          // Update unread count
+          set((state) => ({
+            users: state.users.map((user) =>
+              user._id === newMessage.senderId._id
+                ? { ...user, unreadCount: (user.unreadCount || 0) + 1 }
+                : user
+            ),
+          }));
+        }
+      }, 300);
     });
 
     //console.log("Subscribed to messages.");
