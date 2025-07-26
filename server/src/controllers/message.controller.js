@@ -5,6 +5,25 @@ import mongoose from "mongoose";
 
 import { getReceiverSocketId, io } from "../lib/sockect.js";
 
+//Helpers
+const updateUnreadCounts = async (userId, contactId) => {
+  const count = await Message.countDocuments({
+    senderId: contactId,
+    receiverId: userId,
+    read: false,
+  });
+
+  const receiverSocketId = getReceiverSocketId(userId);
+  if (receiverSocketId) {
+    io.to(receiverSocketId).emit("unreadCountUpdate", {
+      contactId,
+      count,
+    });
+  }
+};
+
+//Main
+
 export const getUsersForSideBar = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -229,6 +248,19 @@ export const sendMessage = async (req, res) => {
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage);
+      await updateUnreadCounts(receiverId, senderId);
+
+      // Emit unread count update for this contact
+      const unreadCount = await Message.countDocuments({
+        senderId: senderId,
+        receiverId: receiverId,
+        read: false,
+      });
+
+      io.to(receiverSocketId).emit("unreadCountUpdate", {
+        contactId: senderId,
+        count: unreadCount,
+      });
     }
 
     res.status(201).json({

@@ -91,19 +91,19 @@ export const useChatStore = create((set, get) => ({
 
   setSelectedUser: async (user) => {
     const { authUser } = useAuthStore.getState();
+    const socket = useAuthStore.getState().socket;
 
     set({ selectedUser: user });
 
     if (user) {
+      await get().getMessages(user._id);
+
       // Reset unread count for this user
       set((state) => ({
         users: state.users.map((u) =>
           u._id === user._id ? { ...u, unreadCount: 0 } : u
         ),
       }));
-
-      // Fetch messages
-      await get().getMessages(user._id);
 
       // Optimistically mark messages as read in local state
       set((state) => ({
@@ -114,8 +114,13 @@ export const useChatStore = create((set, get) => ({
       }));
 
       // Mark as read in backend via socket
-      const socket = useAuthStore.getState().socket;
       socket.emit("markMessagesRead", {
+        userId: authUser._id,
+        contactId: user._id,
+      });
+
+      // Trigger global unread update
+      socket.emit("updateUnreadCount", {
         userId: authUser._id,
         contactId: user._id,
       });
@@ -124,39 +129,66 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+  incrementUnreadCount: (contactId) => {
+    set((state) => ({
+      users: state.users.map((user) =>
+        user._id === contactId
+          ? { ...user, unreadCount: (user.unreadCount || 0) + 1 }
+          : user
+      ),
+    }));
+  },
+
+  updateUnreadCount: (contactId, count) => {
+    set((state) => ({
+      users: state.users.map((user) =>
+        user._id === contactId ? { ...user, unreadCount: count } : user
+      ),
+    }));
+  },
+
   subscribeToMessages: () => {
     const socket = useAuthStore.getState().socket;
+    const { authUser } = useAuthStore.getState();
 
-    let updateTimeout;
     socket.on("newMessage", (newMessage) => {
       const { selectedUser } = get();
-      clearTimeout(updateTimeout);
+      const isCurrentContact = selectedUser?._id === newMessage.senderId._id;
+      const isIncoming = newMessage.receiverId === authUser._id;
 
-      updateTimeout = setTimeout(() => {
-        if (!selectedUser) return;
-        const isCurrentContact = selectedUser?._id === newMessage.senderId._id;
-
-        if (isCurrentContact) {
-          // Add message and mark as read
-          set({ messages: [...get().messages, newMessage] });
-          socket.emit("markMessagesRead", {
-            userId: authUser._id,
-            contactId: newMessage.senderId._id,
-          });
-        } else {
-          // Update unread count
-          set((state) => ({
-            users: state.users.map((user) =>
-              user._id === newMessage.senderId._id
-                ? { ...user, unreadCount: (user.unreadCount || 0) + 1 }
-                : user
-            ),
-          }));
-        }
-      }, 300);
+      if (isCurrentContact) {
+        // Add to current chat and mark as read
+        set({ messages: [...get().messages, newMessage] });
+        socket.emit("markMessagesRead", {
+          userId: authUser._id,
+          contactId: newMessage.senderId._id,
+        });
+      } else if (isIncoming) {
+        // Trigger unread count update for this contact
+        socket.emit("updateUnreadCount", {
+          userId: authUser._id,
+          contactId: newMessage.senderId._id,
+        });
+      }
     });
 
-    //console.log("Subscribed to messages.");
+    // Listen for unread count updates
+    socket.on("unreadCountUpdate", ({ contactId, count }) => {
+      get().updateUnreadCount(contactId, count);
+    });
+
+    // Request initial unread counts on connection
+    const fetchInitialUnreadCounts = async () => {
+      const users = get().users;
+      for (const user of users) {
+        socket.emit("updateUnreadCount", {
+          userId: authUser._id,
+          contactId: user._id,
+        });
+      }
+    };
+
+    fetchInitialUnreadCounts();
   },
 
   unsubscribeFromMessages: () => {

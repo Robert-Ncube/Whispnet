@@ -39,8 +39,30 @@ io.on("connection", (socket) => {
         },
         { $set: { read: true } }
       );
+      await updateUnreadCounts(data.userId, data.contactId);
     } catch (error) {
       console.error("Error marking messages as read:", error);
+    }
+  });
+
+  // Add handler for unread count updates
+  socket.on("updateUnreadCount", async ({ userId, contactId }) => {
+    try {
+      const count = await Message.countDocuments({
+        senderId: contactId,
+        receiverId: userId,
+        read: false,
+      });
+
+      const receiverSocketId = getReceiverSocketId(userId);
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("unreadCountUpdate", {
+          contactId,
+          count,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating unread count:", error);
     }
   });
 
