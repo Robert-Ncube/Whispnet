@@ -39,7 +39,6 @@ io.on("connection", (socket) => {
         },
         { $set: { read: true } }
       );
-      await updateUnreadCounts(data.userId, data.contactId);
     } catch (error) {
       console.error("Error marking messages as read:", error);
     }
