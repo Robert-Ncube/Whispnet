@@ -8,7 +8,6 @@ export const useChatStore = create((set, get) => ({
   isUsersLoading: false,
   isMessagesLoading: false,
   isSendingMessage: false,
-  unreadMessages: [],
   users: [],
   selectedUser: null,
   discoverableUsers: [],
@@ -22,8 +21,6 @@ export const useChatStore = create((set, get) => ({
         users: response.data.users,
         chattedUserIds: response.data.users.map((u) => u._id),
       });
-
-      console.log("Users", response.data.users);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to load users.");
     } finally {
@@ -35,7 +32,6 @@ export const useChatStore = create((set, get) => ({
     try {
       const response = await axiosInstance.get(`/messages/user/${userId}`);
       set({ selectedUser: response.data.user });
-      //console.log("Fetched user by ID:", response.data);
     } catch (error) {
       console.error("Error fetching user by ID:", error);
       toast.error(
@@ -49,7 +45,6 @@ export const useChatStore = create((set, get) => ({
     try {
       const response = await axiosInstance.get(`/messages/${userId}`);
       set({ messages: response.data.messages });
-      // console.log("Fetched messages:", response.data);
     } catch (error) {
       const errorStatus = error?.response.status;
       errorStatus !== 404
@@ -73,8 +68,6 @@ export const useChatStore = create((set, get) => ({
       toast.error(error.response.data.message);
     }
   },
-
-  setUnreadMessages: () => {},
 
   getDiscoverableUsers: async () => {
     try {
@@ -194,8 +187,6 @@ export const useChatStore = create((set, get) => ({
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     socket.off("newMessage");
-
-    //console.log("Unsubscribed from messages");
   },
 
   resetChatStore: () =>
