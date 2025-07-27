@@ -4,12 +4,14 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import helmet from "helmet";
-
 import mainRoutes from "./routes/main.routes.js";
 import { connectDB } from "./lib/db.js";
 import { app, server } from "./lib/sockect.js";
 
+import path from "path";
+
 dotenv.config();
+const __dirname = path.resolve();
 
 // Middleware
 app.use(express.json({ limit: "50mb" }));
@@ -28,6 +30,14 @@ app.use(helmet());
 
 //Routes
 app.use("/api", mainRoutes);
+
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../client/dist")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../client", "dist", "index.html"));
+  });
+}
 
 const PORT = process.env.PORT;
 
