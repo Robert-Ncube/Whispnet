@@ -1,2 +1,2 @@
 # Whispnet
-A full stack online chat app.
+A full MERN Stack online chat application.
